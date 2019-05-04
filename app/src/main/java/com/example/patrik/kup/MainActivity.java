@@ -45,14 +45,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void Onclick(View v){
-        nagyAtmEdit.setBackgroundColor(COLOR_WHITE);
-        kisAtmEdit.setBackgroundColor(COLOR_WHITE);
-        hosszEdit.setBackgroundColor(COLOR_WHITE);
+        closeKeyboard();
+        kupText.setText("");
+        felKupText.setText("");
+        kupArText.setText("");
+        lejtText.setText("");
         if (kisAtmEdit.getText().toString().equals("")){
             kisAtmEdit.setText("0");
         }
-        karakterEllenoriz(nagyAtmEdit.getText().toString(), kisAtmEdit.getText().toString(), hosszEdit.getText().toString());
 
+
+        Ellenorzo nagyAtm = new Ellenorzo(nagyAtmEdit,getString(R.string.nagyAtmHiba));
+        Ellenorzo kisAtm = new Ellenorzo(kisAtmEdit,getString(R.string.kisAtmHiba));
+        Ellenorzo hossz = new Ellenorzo(hosszEdit,getString(R.string.hosszHiba));
+        if(!(nagyAtm.getHiba() || kisAtm.getHiba() || hossz.getHiba())){
+            if (!(nagyAtm.ertekEllenoriz(nagyAtm.getKimenet(),kisAtm.getKimenet(),hossz.getKimenet()))){
+                Kiszamolo szamolgato = new Kiszamolo(nagyAtm.getKimenet(), kisAtm.getKimenet(), hossz.getKimenet());
+                kupText.setText("Kúpszög: " + String.format("%.3f", szamolgato.getKupszog()) + "°");
+                felKupText.setText("Félkúpszög: " + String.format("%.3f", szamolgato.getFelkupszog()) + "°");
+                kupArText.setText("Kúpossági arány: 1:" + String.format("%.3f", szamolgato.getArany()));
+                lejtText.setText("Lejtés: 1:" + String.format("%.3f", szamolgato.getLejtes()));
+            }
+        }
+    }
+
+    private void closeKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     public void initGUI(){
@@ -67,115 +89,117 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void karakterEllenoriz(String nagyAtm, String kisAtm, String hossz){
-
-        Boolean mindenfasza = true;
-        Double  dNagyAtm = 0.0;
-        Double dKisAtm = 0.0;
-        Double dHossz = 0.0;
-
-        try{
-            dNagyAtm = Double.parseDouble(nagyAtm);
-        }
-        catch (Exception e){
-            mindenfasza = false;
-            nagyAtmEdit.setBackgroundColor(COLOR_RED);
-            Toast.makeText(MainActivity.this,"A nagy átmérőnek számnak kell lennie!!!", Toast.LENGTH_SHORT).show();
-        }
-
-        try{
-            dKisAtm = Double.parseDouble(kisAtm);
-        }
-        catch (Exception e){
-            mindenfasza = false;
-            kisAtmEdit.setBackgroundColor(COLOR_RED);
-            Toast.makeText(MainActivity.this,"A kis átmérőnek számnak kell lennie!!!", Toast.LENGTH_SHORT).show();
-        }
-
-        try{
-            dHossz = Double.parseDouble(hossz);
-        }
-        catch (Exception e){
-            mindenfasza = false;
-            hosszEdit.setBackgroundColor(COLOR_RED);
-            Toast.makeText(MainActivity.this,"A hosszúságnak számnak kell lennie!!!", Toast.LENGTH_SHORT).show();
-        }
-        if (mindenfasza) {
-           if(ertekEllenoriz(dNagyAtm, dKisAtm, dHossz)) {
-               Kiszamolo eredmeny = new Kiszamolo(dNagyAtm, dKisAtm, dHossz);
-               eredmeny.szog();
-               eredmeny.arany();
-           }
-        }
-
-    }
-
-    public Boolean ertekEllenoriz(Double nagyAtm, Double kisAtm, Double hossz) {
-
-        Boolean mindenfasza = true;
-
-        if (nagyAtm <= 0) {
-            mindenfasza = false;
-            nagyAtmEdit.setBackgroundColor(COLOR_RED);
-            Toast.makeText(MainActivity.this, "A nagy átmérőnek nagyobbnak kell lennie 0-nál!!!", Toast.LENGTH_SHORT).show();
-        }
-
-        if (hossz <= 0) {
-            mindenfasza = false;
-            hosszEdit.setBackgroundColor(COLOR_RED);
-            Toast.makeText(MainActivity.this, "A hossznak nagyobbnak kell lennie 0-nál!!!", Toast.LENGTH_SHORT).show();
-        }
-
-        if(kisAtm >= nagyAtm) {
-            mindenfasza = false;
-            nagyAtmEdit.setBackgroundColor(COLOR_RED);
-            kisAtmEdit.setBackgroundColor(COLOR_RED);
-            Toast.makeText(MainActivity.this, "A nagy átmérőnek nagyobbnak kell lennie, mint a kisátmérő!!!", Toast.LENGTH_SHORT).show();
-        }
-
-        return mindenfasza;
-    }
-
     class Ellenorzo{
-        String nagyAtm;
-        String kisAtm;
-        String hossz;
+
+        private EditText bemenet;
+        String hibauzenet;
+        Double kimenet;
+        private Boolean hiba;
+
+        public Ellenorzo(EditText bemenet, String hibauzenet){
+            this.bemenet    = bemenet;
+            this.hibauzenet = hibauzenet;
+            this.hiba       = false;
+
+            bemenet.setBackgroundColor(COLOR_WHITE);
+
+            karakterEllenoriz(this.bemenet,this.hibauzenet);
+        }
+
+
+        public void karakterEllenoriz(EditText bemenet, String hibauzenet) {
+
+            try {
+                this.kimenet = Double.parseDouble(bemenet.getText().toString());
+            } catch (Exception e) {
+                this.hiba = true;
+                bemenet.setBackgroundColor(COLOR_RED);
+                Toast.makeText(MainActivity.this, hibauzenet, Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        public Boolean ertekEllenoriz(Double dNagyAtm, Double dKisAtm, Double dHossz) {
+
+            Boolean ertekhiba = false;
+
+            if (dNagyAtm <= 0) {
+                ertekhiba = true;
+                nagyAtmEdit.setBackgroundColor(COLOR_RED);
+                Toast.makeText(MainActivity.this, "A nagy átmérőnek nagyobbnak kell lennie 0-nál!!!", Toast.LENGTH_SHORT).show();
+            }
+
+            if (dHossz <= 0) {
+                ertekhiba = true;
+                hosszEdit.setBackgroundColor(COLOR_RED);
+                Toast.makeText(MainActivity.this, "A hossznak nagyobbnak kell lennie 0-nál!!!", Toast.LENGTH_SHORT).show();
+            }
+            if (!(dNagyAtm <=0)) {
+                if (dKisAtm >= dNagyAtm) {
+                    ertekhiba = true;
+                    nagyAtmEdit.setBackgroundColor(COLOR_RED);
+                    kisAtmEdit.setBackgroundColor(COLOR_RED);
+                    Toast.makeText(MainActivity.this, "A nagy átmérőnek nagyobbnak kell lennie, mint a kisátmérő!!!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            return ertekhiba;
+        }
+
+        public Boolean getHiba() {
+            return hiba;
+        }
+
+        public Double getKimenet() {
+            return kimenet;
+        }
     }
+
 
     class Kiszamolo {
+        private Double nagyAtm,
+                kisAtm,
+                hossz;
 
-        private Double nagyAtm;
-        private Double kisAtm;
-        private Double hossz;
+        Double  kupszog,
+                felkupszog,
+                arany,
+                lejtes;
 
-        public Kiszamolo(Double nagyAtm, Double kisAtm, Double hossz) {
-
+        public Kiszamolo(Double nagyAtm, Double kisAtm, Double hossz){
             this.nagyAtm = nagyAtm;
-            this.kisAtm = kisAtm;
-            this.hossz = hossz;
+            this.kisAtm  = kisAtm;
+            this.hossz   = hossz;
 
+            this.felkupszog = felkupszog(this.nagyAtm, this.kisAtm, this.hossz);
+            this.kupszog    = this.felkupszog * 2;
+            this.arany      = arany(this.nagyAtm, this.kisAtm, this.hossz);
+            this.lejtes     = this.arany / 2;
         }
 
-        public void szog(){
-
-            Double szog;
-
-            szog = Math.atan(((nagyAtm - kisAtm) / 2) / hossz);
-            szog = Math.toDegrees(szog);
-            felKupText.setText("Félkúpszög: " + String.format("%.3f", szog));
-            szog = szog * 2;
-            kupText.setText("Kúpszög: " + String.format("%.3f",szog));
+        public Double felkupszog(Double nagyAtm, Double kisAtm, Double hossz){
+            return Math.toDegrees(Math.atan(((nagyAtm - kisAtm) / 2) / hossz));
         }
 
-        public void arany(){
-
-            Double arany;
-
-            arany = ((nagyAtm - kisAtm) / hossz);
-            kupArText.setText("Kúpossági arány: 1:" + String.format("%.3f", arany));
-            arany = arany / 2;
-            lejtText.setText("Lejtés: 1:" + String.format("%.3f", arany));
+        public Double arany(Double nagyAtm, Double kisAtm, Double hossz){
+            return ((nagyAtm - kisAtm) / hossz);
         }
+
+        public Double getKupszog(){
+            return kupszog;
+        }
+
+        public Double getFelkupszog(){
+            return felkupszog;
+        }
+
+        public Double getArany(){
+            return arany;
+        }
+
+        public Double getLejtes(){
+            return lejtes;
+        }
+
     }
 
 }
