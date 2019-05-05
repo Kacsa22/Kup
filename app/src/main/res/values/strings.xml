@@ -3,4 +3,7 @@
     <string name="nagyAtmHiba">A nagy átmérőnek számnak kell lennie!!!</string>
     <string name="kisAtmHiba">A kis átmérőnek számnak kell lennie!!!</string>
     <string name="hosszHiba">A hosszúságnak számnak kell lennie!!!</string>
+    <string name="nagyAtmHiba2">A nagy átmérőnek nagyobbnak kell lennie 0-nál!!!</string>
+    <string name="hosszHiba2">A hossznak nagyobbnak kell lennie 0-nál!!!</string>
+    <string name="kisAtmHiba2">"A nagy átmérőnek nagyobbnak kell lennie, mint a kisátmérő!!!"</string>
 </resources>
