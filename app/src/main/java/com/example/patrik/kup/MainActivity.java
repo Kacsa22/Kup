@@ -53,19 +53,17 @@ public class MainActivity extends AppCompatActivity {
         if (kisAtmEdit.getText().toString().equals("")){
             kisAtmEdit.setText("0");
         }
-
-
-        Ellenorzo nagyAtm = new Ellenorzo(nagyAtmEdit,getString(R.string.nagyAtmHiba));
-        Ellenorzo kisAtm = new Ellenorzo(kisAtmEdit,getString(R.string.kisAtmHiba));
-        Ellenorzo hossz = new Ellenorzo(hosszEdit,getString(R.string.hosszHiba));
-        if(!(nagyAtm.getHiba() || kisAtm.getHiba() || hossz.getHiba())){
-            if (!(nagyAtm.ertekEllenoriz(nagyAtm.getKimenet(),kisAtm.getKimenet(),hossz.getKimenet()))){
-                Kiszamolo szamolgato = new Kiszamolo(nagyAtm.getKimenet(), kisAtm.getKimenet(), hossz.getKimenet());
-                kupText.setText("Kúpszög: " + String.format("%.3f", szamolgato.getKupszog()) + "°");
-                felKupText.setText("Félkúpszög: " + String.format("%.3f", szamolgato.getFelkupszog()) + "°");
-                kupArText.setText("Kúpossági arány: 1:" + String.format("%.3f", szamolgato.getArany()));
-                lejtText.setText("Lejtés: 1:" + String.format("%.3f", szamolgato.getLejtes()));
-            }
+        
+        NagyAtmEllenorzo nagyAtmEll = new NagyAtmEllenorzo(nagyAtmEdit, getString(R.string.nagyAtmHiba), getString(R.string.nagyAtmHiba2));
+        KisAtmEllenorzo kisAtmEll = new KisAtmEllenorzo(kisAtmEdit, nagyAtmEdit, getString(R.string.kisAtmHiba), getString(R.string.kisAtmHiba2));
+        HosszEllenorzo hosszEll = new HosszEllenorzo(hosszEdit, getString(R.string.hosszHiba), getString(R.string.hosszHiba2);
+        
+        if(!(nagyAtmEll.getHiba() || kisAtmEll.getHiba() || hosszEll.getHiba())){
+            Kiszamolo szamolgato = new Kiszamolo(nagyAtm.getKimenet(), kisAtm.getKimenet(), hossz.getKimenet());
+            kupText.setText("Kúpszög: " + String.format("%.3f", szamolgato.getKupszog()) + "°");
+            felKupText.setText("Félkúpszög: " + String.format("%.3f", szamolgato.getFelkupszog()) + "°");
+            kupArText.setText("Kúpossági arány: 1:" + String.format("%.3f", szamolgato.getArany()));
+            lejtText.setText("Lejtés: 1:" + String.format("%.3f", szamolgato.getLejtes()));
         }
     }
 
@@ -88,73 +86,123 @@ public class MainActivity extends AppCompatActivity {
         main        = findViewById(R.id.main);
     }
 
-
-    class Ellenorzo{
-
-        private EditText bemenet;
-        String hibauzenet;
-        Double kimenet;
-        private Boolean hiba;
-
-        public Ellenorzo(EditText bemenet, String hibauzenet){
-            this.bemenet    = bemenet;
-            this.hibauzenet = hibauzenet;
-            this.hiba       = false;
-
-            bemenet.setBackgroundColor(COLOR_WHITE);
-
-            karakterEllenoriz(this.bemenet,this.hibauzenet);
+    
+    class Ellenorzo {
+        String karakterHibaUzenet;
+        String ertekHibaUzenet;
+        boolean hiba;
+        Double ertek;
+        
+        public Ellenorzo(String karakterHibaUzenet, String ertekHibaUzenet) {
+            this.karakterHibaUzenet = karakterHibaUzenet;
+            this.ertekHibaUzenet = ertekHibaUzenet;
         }
-
-
-        public void karakterEllenoriz(EditText bemenet, String hibauzenet) {
-
-            try {
+        
+        public boolean karakterEllenoriz(EditText bemenet, String karakterHibaUzenet) {
+            Boolean karakter_ok;
+            try {                
                 this.kimenet = Double.parseDouble(bemenet.getText().toString());
-            } catch (Exception e) {
-                this.hiba = true;
+                
+                karakter_ok = true;              
+            } 
+            catch (Exception e) {                
                 bemenet.setBackgroundColor(COLOR_RED);
-                Toast.makeText(MainActivity.this, hibauzenet, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, karakterHibaUzenet, Toast.LENGTH_SHORT).show();
+                
+                karakter_ok = false;
             }
+            
+            return karakter_ok;
         }
-
-        public Boolean ertekEllenoriz(Double dNagyAtm, Double dKisAtm, Double dHossz) {
-
-            Boolean ertekhiba = false;
-
-            if (dNagyAtm <= 0) {
-                ertekhiba = true;
-                nagyAtmEdit.setBackgroundColor(COLOR_RED);
-                Toast.makeText(MainActivity.this, "A nagy átmérőnek nagyobbnak kell lennie 0-nál!!!", Toast.LENGTH_SHORT).show();
-            }
-
-            if (dHossz <= 0) {
-                ertekhiba = true;
-                hosszEdit.setBackgroundColor(COLOR_RED);
-                Toast.makeText(MainActivity.this, "A hossznak nagyobbnak kell lennie 0-nál!!!", Toast.LENGTH_SHORT).show();
-            }
-            if (!(dNagyAtm <=0)) {
-                if (dKisAtm >= dNagyAtm) {
-                    ertekhiba = true;
-                    nagyAtmEdit.setBackgroundColor(COLOR_RED);
-                    kisAtmEdit.setBackgroundColor(COLOR_RED);
-                    Toast.makeText(MainActivity.this, "A nagy átmérőnek nagyobbnak kell lennie, mint a kisátmérő!!!", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            return ertekhiba;
-        }
-
-        public Boolean getHiba() {
+        
+        boolean getHiba(){
             return hiba;
         }
-
-        public Double getKimenet() {
-            return kimenet;
+        
+        Double getErtek(){
+            return ertek;
         }
     }
+    
+    class NagyAtmEllenorzo extends Ellenorzo {
 
+        public NagyAtmEllenorzo(EditText nagyAtmEdit, String karakterHibaUzenet, String ertekHibaUzenet) {
+            super(String karakterHibaUzenet, String ertekHibaUzenet);
+            
+            karakterEllenoriz(nagyAtmEdit, karakterHibaUzenet);
+            ertekEllenoriz(nagyAtmEdit, ertekHibaUzenet);
+        }
 
+        public void ertekEllenoriz(EditText nagyAtmEdit, String ertekHibaUzenet) {
+
+            Double nagyAtm = Double.parseDouble(nagyAtmEdit.getText().toString());
+            
+            if (nagyAtm <= 0) {
+                hiba = true;
+                nagyAtm.setBackgroundColor(COLOR_RED);
+                Toast.makeText(MainActivity.this, ertekHibaUzenet, Toast.LENGTH_SHORT).show();
+            }
+            else {
+                kimenet = nagyAtm;
+            }
+        }
+    }
+    
+    class KisAtmEllenorzo extends Ellenorzo {
+    
+        public KisAtmEllenorzo(EditText kisAtmEdit, EditText nagyAtmEdit, String karakterHibaUzenet, String ertekHibaUzenet) {
+            super(EditText kisAtmEdit, EditText nagyAtmEdit, String karakterHibaUzenet, String ertekHibaUzenet);
+            
+            karakterEllenoriz(EditText kisAtmEdit, String karakterHibaUzenet);
+            ertekEllenoriz(EditText kisAtmEdit, EditText nagyAtmEdit, String ertekHibaUzenet);
+        }
+
+        public Boolean ertekEllenoriz(EditText kisAtmEdit, EditText nagyAtmEdit, String ertekHibaUzenet) {
+
+            Double kisAtm = Double.parseDouble(kisAtmEdit.getText().toString());
+            Double nagyAtm = Double.parseDouble(nagyAtmEdit.getText().toString());
+            
+            if (nagyAtm > 0) {
+                if (kisAtm >= nagyAtm) {
+                    hiba = true;
+                    nagyAtmEdit.setBackgroundColor(COLOR_RED);
+                    kisAtmEdit.setBackgroundColor(COLOR_RED);
+                    Toast.makeText(MainActivity.this, ertekHibaUzenet, Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    kimenet = kisAtm;
+                }
+            }
+            
+        }
+        
+    }
+    
+    class HosszEllenorzo extends Ellenorzo {
+    
+        public HosszEllenorzo(EditText hosszEdit, String karakterHibaUzenet, String ertekHibaUzenet) {
+            super(EditText hosszEdit, String karakterHibaUzenet, String ertekHibaUzenet);
+            
+            karakterEllenoriz(EditText hosszEdit, String ertekHibaUzenet);
+            ertekEllenoriz(EditText hosszEdit, String ertekHibaUzenet);
+        }
+        
+        public void ertekEllenoriz(EditText hosszEdit, String ertekHibaUzenet) {
+
+            Double hossz = Double.parseDouble(hosszEdit.getText().toString());         
+
+            if (hossz <= 0) {
+                hiba = true;
+                hosszEdit.setBackgroundColor(COLOR_RED);
+                Toast.makeText(MainActivity.this, hibauzenet, Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                kimenet = hossz;
+            }
+        }        
+    }
+    
     class Kiszamolo {
         private Double nagyAtm,
                 kisAtm,
